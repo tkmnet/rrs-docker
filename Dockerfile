@@ -21,6 +21,7 @@ RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
 
 RUN apt install -y --no-install-recommends wget sudo
 RUN apt install -y --no-install-recommends xvfb xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
+RUN apt install -y --no-install-recommends iproute2
 RUN apt install -y --no-install-recommends ant
 
 RUN export LICENSE_ACCEPTED=yes
@@ -30,11 +31,12 @@ WORKDIR /root
 RUN git clone 'https://github.com/tkmnet/rrsenv.git'
 WORKDIR /root/rrsenv
 RUN sh init.sh
-RUN git clone 'https://github.com/tkmnet/rcrs-server.git'
-RUN rm -rf roborescue
-RUN mv rcrs-server roborescue
+#RUN git clone 'https://github.com/tkmnet/rcrs-server.git'
+#RUN rm -rf roborescue
+#RUN mv rcrs-server roborescue
 WORKDIR /root/rrsenv/roborescue
-RUN env LANG=en_US.UTF-8 ant -lib ./build-tools complete-build
+#RUN env LANG=en_US.UTF-8 ant -lib ./build-tools complete-build
+
 RUN apt install -y --no-install-recommends build-essential autoconf libtool pkg-config openssh-client openssh-server
 RUN cpan -i Net::OpenSSH
 RUN cpan -i IO::Pty
@@ -50,11 +52,18 @@ RUN mkdir -p /var/run/sshd
 
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 
+
+WORKDIR /root/rrsenv
+RUN rm -rf AGENT; mkdir /agent; ln -s /agent AGENT
+RUN rm -rf MAP; mkdir /map; ln -s /map MAP
+RUN rm -rf LOG; mkdir /log; ln -s /log LOG
+COPY sample /agent/sample
+COPY test /map/test
+
 WORKDIR /root
+RUN ./rrsenv/script/rrscluster cfg-template
 COPY simulation.sh /root/simulation.sh
 RUN chmod a+x /root/simulation.sh
-
-RUN ./rrsenv/script/rrscluster cfg-template
 
 # clean up
 #RUN apt-get upgrade -y && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* 
