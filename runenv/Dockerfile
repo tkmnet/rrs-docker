@@ -16,6 +16,7 @@ RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
 
 RUN apt install -y --no-install-recommends wget sudo
 RUN apt install -y --no-install-recommends xvfb xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
+RUN apt install -y --no-install-recommends libxrender1 libxtst6 libxi6
 RUN apt install -y --no-install-recommends iproute2
 
 RUN export LICENSE_ACCEPTED=yes
@@ -34,11 +35,17 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 RUN apt install -y --no-install-recommends expect
 RUN useradd user
 RUN echo 'user	ALL=(ALL:ALL) ALL' >> /etc/sudoers
+RUN mkdir -p /home/user/.ssh
+RUN chown -R user:user /home/user
 
 RUN apt-get upgrade -y && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* 
 
 COPY start.sh /root/start.sh
 RUN chmod a+x /root/start.sh
+
+RUN echo '#!/bin/sh' > /bin/pw
+RUN echo 'cat /user-password.txt' >> /bin/pw
+RUN chmod a+x /bin/pw
 
 WORKDIR /root
 ENTRYPOINT "/root/start.sh"

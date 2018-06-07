@@ -16,4 +16,6 @@ expect Retype\ ; send $password; send \r;
 expect eof exit 0
 " >/dev/null 2>&1
 
-echo user : $password
+echo user : $password | tee /user-password.txt
+
+bash
